@@ -1,0 +1,182 @@
+import React, { useState } from 'react';
+import { 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  Legend, 
+  ResponsiveContainer 
+} from 'recharts';
+
+const LabQCVisualization = () => {
+  // Extract all test names from the data
+  const [selectedTest, setSelectedTest] = useState('Albumin');
+  
+  // Parse the data from the PDF
+  const months = ['Mar-24', 'April', 'May', 'Jun', 'July', 'August', 'September', 'October', 'November', 'December', 'Jan-25', 'FEB', 'March'];
+  
+  const rawData = {
+    'Albumin': [2.00, 1.81, 1.92, 1.58, 1.43, 1.54, 1.37, 1.46, 1.79, 1.42, 1.62, 1.79, null],
+    'Alkaline Phosphatese': [4.35, 1.7, 2.74, 2.19, 2.64, 1.93, 1.49, 1.96, 1.91, 2.24, 3.58, 2.56, null],
+    'SGPT/ALT': [1.53, 1.52, 1.77, 1.19, 1.54, 1.33, 1.41, 1.17, 1.42, 3.08, 3.00, 2.66, null],
+    'Amylase': [null, 1.01, 0, null, 0, null, 0, 0, 0, 0, 0, 0, null],
+    'SGOT/AST': [1.42, 1.2, 1.48, 1.2, 1.23, 1.49, 1.02, 1.23, 1.34, 1.46, 1.52, 1.52, null],
+    'Bilirubin, Direct': [2.54, 2.59, 2.89, 3, 3.33, 3.54, 3.42, 3.16, 2.52, 2.86, 3.4, 3.2, null],
+    'Bilirubin, Total': [1.91, 1.25, 1.68, 1.84, 1.55, 1.1, 2.13, 1.64, 2.1, 2.16, 1.91, 1.68, null],
+    'Calcium': [1.3, 0.97, 0.88, 1.02, 1.02, 0.59, 0.92, 0.77, 1.04, 1.12, 1.1, 0.94, null],
+    'HDL': [2.05, 0.95, 2.23, 2.76, 2.22, 1.78, 1.9, 1.77, 2.79, 2.89, 2.61, 3.68, null],
+    'LDL': [1.94, 1.97, 1.82, 2.25, 3.04, 2.73, 2.74, 2.34, 2.13, 3.11, 2.55, 2.11, null],
+    'Cholesterol,Total': [2.15, 1.06, 1.4, 1.73, 1.62, 1.47, 1.48, 1.4, 1.43, 1.43, 2.68, 1.28, null],
+    'Creatinine Kinase': [1.44, 1.27, 0, null, 0, 0, 0, 0, 0, 0, 0, 0, null],
+    'Creatinine': [1.42, 1.13, 1.19, 1.65, 2.31, 1.42, 1.29, 1.8, 1.61, 1.44, 1.35, 1.25, null],
+    'GGT': [1.54, 1.29, 1.42, 1.19, 1.33, 1.3, 1.26, 1.38, 1.67, 1.61, 1.86, 1.97, null],
+    'Glucose': [1.42, 1.07, 1.18, 1.34, 1.37, 1.56, 1.3, 1.26, 1.33, 1.24, 1.15, 1.21, null],
+    'LDH': [1.28, 0, 0, 0, 0, 0, 0, 0, 0.01, 0, 0, 0, null],
+    'LIPASE': [null, 1.36, 0, null, 0.00, 0, 0, 0, 0, 0, 0.02, 0, null],
+    'Magnesium': [null, 1.96, 0, null, 0, 0, 0, 0, 0, 0, 0, 0, null],
+    'Phosphorus': [1.81, 1.03, 1.39, 1.24, 1.17, 1.7, 1.43, 1.22, 1.57, 1.53, 1.27, 2.05, null],
+    'Protein,Total': [1.65, 0.99, 1.02, 1.47, 1.31, 1.43, 1.61, 1.77, 1.75, 1.38, 1.48, 1.21, null],
+    'Triglycerides': [1, 1.61, 1.28, 1.23, 1.63, 1.17, 1.96, 1.26, 2.95, 1.48, 1.92, 0.96, null],
+    'Urea': [3.04, 3.24, 3.9, 2.98, 1.67, 2.1, 1.97, 2.82, 2.32, 1.84, 2.95, 2.46, null],
+    'Uric acid': [1.44, 1.58, 1.65, 1.73, 1.04, 1.54, 1.32, 1.003, 1.59, 1.13, 1.65, 1.41, null],
+    'Chloride': [2.56, 4.09, 2.4, 4.02, 4.12, 2.5, 4.28, 4.26, 4.53, 3.85, 4.17, 3.74, null],
+    'Potassium': [1.74, 2.22, 2.77, 2.26, 2.38, 2.06, 2.19, 2.34, 1.98, 2.08, 2.33, 2.07, null],
+    'Sodium': [0.82, 1.03, 1.17, 0.89, 0.99, 0.85, 1.06, 0.97, 1.01, 1, 1.05, 1.04, null]
+  };
+  
+  const testNames = Object.keys(rawData);
+  
+  // Transform the data for the selected test
+  const getSelectedTestData = () => {
+    const testData = rawData[selectedTest];
+    return months.map((month, index) => ({
+      month: month,
+      value: testData[index] || 0
+    }));
+  };
+  
+  // Find target/acceptable range (assuming 2.0 is the upper acceptable limit for most tests)
+  const getAcceptableLimit = () => {
+    // Could be customized per test if needed
+    return 2.0;
+  };
+  
+  // Calculate statistics
+  const getStats = () => {
+    const values = rawData[selectedTest].filter(v => v !== null && v !== 0);
+    const sum = values.reduce((a, b) => a + b, 0);
+    const avg = sum / values.length;
+    const max = Math.max(...values);
+    const min = Math.min(...values);
+    
+    return {
+      average: avg.toFixed(2),
+      maximum: max.toFixed(2),
+      minimum: min.toFixed(2),
+      outOfRange: values.filter(v => v > getAcceptableLimit()).length
+    };
+  };
+  
+  const stats = getStats();
+  
+  return (
+    <div className="flex flex-col p-4 max-w-6xl mx-auto">
+      <h1 className="text-2xl font-bold mb-4">Integra 400 plus-420094- IQC-CV- LEVEL - 2</h1>
+      
+      <div className="mb-4">
+        <label className="mr-2 font-medium">Select Test:</label>
+        <select 
+          value={selectedTest} 
+          onChange={(e) => setSelectedTest(e.target.value)}
+          className="border rounded p-1"
+        >
+          {testNames.map(test => (
+            <option key={test} value={test}>{test}</option>
+          ))}
+        </select>
+      </div>
+
+      <div className="mb-4 grid grid-cols-4 gap-4">
+        <div className="bg-blue-50 p-3 rounded">
+          <div className="text-sm text-gray-500">Average CV%</div>
+          <div className="text-xl font-bold">{stats.average}</div>
+        </div>
+        <div className="bg-blue-50 p-3 rounded">
+          <div className="text-sm text-gray-500">Maximum CV%</div>
+          <div className="text-xl font-bold">{stats.maximum}</div>
+        </div>
+        <div className="bg-blue-50 p-3 rounded">
+          <div className="text-sm text-gray-500">Minimum CV%</div>
+          <div className="text-xl font-bold">{stats.minimum}</div>
+        </div>
+        <div className="bg-blue-50 p-3 rounded">
+          <div className="text-sm text-gray-500">Months > 2.0 CV%</div>
+          <div className="text-xl font-bold">{stats.outOfRange}</div>
+        </div>
+      </div>
+      
+      <div className="h-96 w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart
+            data={getSelectedTestData()}
+            margin={{ top: 20, right: 30, left: 20, bottom: 70 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis 
+              dataKey="month" 
+              angle={-45}
+              textAnchor="end"
+              height={70}
+            />
+            <YAxis 
+              label={{ value: 'CV%', angle: -90, position: 'insideLeft' }} 
+            />
+            <Tooltip />
+            <Legend />
+            <Bar 
+              dataKey="value" 
+              name={`${selectedTest} CV%`} 
+              fill="#3182ce"
+              fillOpacity={0.8}
+              // Color bars differently based on value
+              isAnimationActive={true}
+              shape={(props) => {
+                return (
+                  <rect
+                    {...props}
+                    fill={props.value > getAcceptableLimit() ? '#e53e3e' : '#3182ce'}
+                    x={props.x}
+                    y={props.y}
+                    width={props.width}
+                    height={props.height}
+                    rx={2}
+                  />
+                );
+              }}
+            />
+            {/* Reference line for acceptable limit */}
+            <svg>
+              <defs>
+                <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5"
+                  markerWidth="6" markerHeight="6" orient="auto">
+                  <path d="M 0 0 L 10 5 L 0 10 z" fill="#666" />
+                </marker>
+              </defs>
+            </svg>
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+      <div className="text-sm text-gray-500 mt-2">
+        Note: Bars highlighted in red indicate CV% values exceeding 2.0, which may require attention. 
+        Missing values or zeros in the original data are not displayed.
+      </div>
+    </div>
+  );
+};
+
+export default LabQCVisualization;
+
+});
+}
